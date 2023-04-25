@@ -128,14 +128,16 @@ def format_excel_file(file_path):
     # Set sheet title to the filename
     ws.title = os.path.splitext(os.path.basename(file_path))[0]
 
-    # Add file name to cell M1
-    ws['M1'] = os.path.basename(file_path)
-    # Merge cells M1 and N1
-    ws.merge_cells('M1:N1')
+    # Find the last available row in column C
+    last_row = len(ws['C']) - 1
+    if ws['C1'].value is None:
+        last_row = 0
 
-    # Add "Inspector Name:" to cell M2 and "Date" to cell M3
-    ws['M2'] = "Inspector Name:"
-    ws['M3'] = "Date"
+    # Add "Inspector Name:" to the cell below the last available row in column C
+    ws.cell(row=last_row + 2, column=3, value="Inspector Name:")
+
+    # Add "Date" to the cell below "Inspector Name:"
+    ws.cell(row=last_row + 3, column=3, value="Date")
 
     heavy_border = Side(style='thick')
     thin_border = Side(style='thin')
@@ -170,7 +172,25 @@ def format_excel_file(file_path):
     ws['M2'].font = Font(bold=True)
     ws['M3'].font = Font(bold=True)
 
+
+
+    # Create a new sheet and copy the header from cell A1
+    ws_new = wb.create_sheet("Assemblies")
+    ws_new["A1"] = ws["A1"].value
+
+    # Iterate through the cells in column A of the first sheet, and copy non-empty cells to the second sheet's column A
+    new_row_index = 2  # Start at the second row in the new sheet (after the header)
+    for cell in ws['A']:
+        if cell.row > 1 and cell.value is not None:
+            ws_new.cell(row=new_row_index, column=1, value=cell.value)
+            new_row_index += 1
+
+
+
+    # Save the workbook
     wb.save(file_path)
+
+
 
 
 def mm_to_points(mm):
